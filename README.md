@@ -42,3 +42,12 @@ for future
 - **Expiration**: The OTP should have a short expiration time to enhance security.
 - **Rate Limiting**: Implement rate limiting on OTP requests to prevent abuse.
 - **Secure Transmission**: Ensure all communications are conducted over HTTPS to protect sensitive data.
+
+<!-- now my plan is to implement authentication.
+first i'll get an email from user through a form.
+and i will generate a random otp using my utility function.
+now I'll register the user with the given email and hashed version of generated otp.
+and at the same time I'll send the otp to user's email as string
+after that the user will enter the otp and press log-in
+now I'll validate it.
+ -->
