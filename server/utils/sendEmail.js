@@ -7,6 +7,13 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Use TLS
+    requireTLS: true,
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 const sendOTPEmail = async (email, otp) => {
@@ -35,7 +42,7 @@ const sendOTPEmail = async (email, otp) => {
         };
 
     } catch (err) {
-        console.error('Error sending OTP email:', error);
+        console.error('Error sending OTP email:', err);
         return {
             success: false,
             message: 'Failed to send OTP',
@@ -45,3 +52,4 @@ const sendOTPEmail = async (email, otp) => {
 };
 
 module.exports.sendOTPEmail = sendOTPEmail;
+

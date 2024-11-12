@@ -1,17 +1,27 @@
+// authMiddleware.js
 const jwt = require("jsonwebtoken");
+const userModel = require("../models/userModel");
+require("dotenv").config();
 
-module.exports.authenticateUser = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({ message: "Access denied. No token provided." });
+module.exports.authenticateUser = async function (req, res, next) {
+  if (!req.cookies.token || req.cookies.token === "") {
+    return res.status(401).json({ message: "No token provided" });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    // Verify the JWT token
+    const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+    
+    // Fetch user based on the decoded token's email
+    const user = await userModel.findOne({ email: decoded.email }).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = user; // Attach user to the request object
+    next(); // Proceed to the next middleware/handler
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token or token expired" });
   }
 };
