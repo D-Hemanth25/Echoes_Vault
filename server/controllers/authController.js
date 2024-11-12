@@ -13,7 +13,7 @@ module.exports.registerUser = async (req, res) => {
     const hashedOTP = await bcrypt.hash(otp, salt);
 
     // create user
-    let user = userModel.create({
+    let user = await userModel.create({
       email,
       otp: hashedOTP,
     });
@@ -36,16 +36,31 @@ module.exports.registerUser = async (req, res) => {
   }
 };
 
-module.exports.loginUser = async (req, res) => {
-  let { email, otp } = req.body;
-  let user = await userModel.findOne({ email: email });
-  
-  bcrypt.compare(otp, user.otp, function (err, result) {
-      if (result) {
-          res.send("you can login");
-      } else {
-          return res.send("incorrect otp");
-      }
-  })
 
+module.exports.loginUser = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, user.otp);
+    if (!isOtpValid) {
+      return res.status(401).json({ message: "Incorrect OTP" });
+    }
+
+    // OTP is valid, generate JWT
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    await userModel.updateOne({ email }, { $unset: { otp: "" } });
+
+    res.json({ message: "Login successful", token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Login failed", error: err.message });
+  }
 };
+
